@@ -553,12 +553,14 @@ foreach my $header (@header) {
 #
 #===============================================================================
 # Socket that reads data from the PEER_HOST over port 30003.
-$proto = getprotobyname('tcp');    #get the tcp protocol
+# $proto = getprotobyname('tcp');    #get the tcp protocol
+# ^^ This won't work within docker - we are hardcoding it to "6" a few lines below
 $connectioncount=0;
 my ($SOCKET);
 while (1) {
 	# create a socket handle (descriptor)
-	socket($SOCKET, AF_INET, SOCK_STREAM, $proto) or die "could not create socket : $!";
+	# This won't work in docker --> socket($SOCKET, AF_INET, SOCK_STREAM, $proto) or die "could not create socket : $!";
+	socket($SOCKET, AF_INET, SOCK_STREAM, 6) or die "could not create socket : $!";
 	# connect to remote server
 	$iaddr = inet_aton($PEER_HOST) or die "Unable to resolve hostname : $PEER_HOST";
 	$paddr = sockaddr_in("30003", $iaddr);    #socket address structure    
