@@ -760,7 +760,7 @@ while (1) {
 		$flight{$hex_ident}{'position_count'}++;
 		$position_count++;
 		#
-		# 18-feb-2020 add-on to reduce messages - number is in msec (so 5e6 = 5 secs). Code snipped by Wiedehopf. 
+		# 18-feb-2020 add-on to reduce messages - number is in msec (so 5e6 = 5 secs). Code snippet by Wiedehopf. 
 		next if (exists $flight{$hex_ident}{'prev_lon_loggedtime'}        && abs($flight{$hex_ident}{'lon_loggedtime'} - $flight{$hex_ident}{'prev_lon_loggedtime'}) < 2e6);
 		# Get angle and distance
 		my $angle = int(angle($latitude,$longitude,$flight{$hex_ident}{'lat'},$flight{$hex_ident}{'lon'}) * 100) / 100;
