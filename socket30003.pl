@@ -63,6 +63,7 @@
 #===============================================================================
 BEGIN { 
 	use strict;
+	use Time::HiRes qw(gettimeofday);
 	use POSIX qw(strftime);
 	use Time::Local;
 	use Socket; # For constants like AF_INET and SOCK_STREAM
@@ -680,20 +681,18 @@ while (1) {
 				exit;
 			}
 		}
-		# Get logged date & time:
-		# 2015/04/06,19:14:29.596
-		my $loggeddatetime = $col[$hdr{'logged_date'}].",".$col[$hdr{'logged_time'}];
-		my ($hour,$millisecond);
-		if (($year,$month,$day,$hour,$minute,$second,$millisecond) = $loggeddatetime =~ /^(\d{4})\/(\d{2})\/(\d{2}),(\d{2}):(\d{2}):(\d{2})\.(\d{1,3})$/){
-			# change date & time into epoch time in milliseconds:
-       		        $loggeddatetime = (timelocal($second,$minute,$hour,$day,($month-1),$year).$millisecond) * 1000;
-		} else {
-			# No valid date & time format
-			 next;
-		}
-       	 	# Save callsign
-       	 	if ($col[$hdr{'callsign'}] =~ /[a-z0-9]+/i) {
-       	 		$flight{$hex_ident}{'callsign'} = $col[$hdr{'callsign'}];
+		my ($sec, $usec) = gettimeofday();
+
+		# use current local system time for the CSV output:
+		$col[$hdr{'logged_date'}] = strftime( "%Y/%m/%d", localtime $sec );
+		$col[$hdr{'logged_time'}] = sprintf( "%s.%03d", strftime( "%H:%M:%S", localtime $sec ), $usec/1000 );
+
+		# epoch time in milliseconds:
+		$loggeddatetime = int($sec * 1000 + $usec/1000);
+
+		# Save callsign
+		if ($col[$hdr{'callsign'}] =~ /[a-z0-9]+/i) {
+			$flight{$hex_ident}{'callsign'} = $col[$hdr{'callsign'}];
 		}
 		# Save longitude and datetime
 		if ($col[$hdr{'lon'}] =~ /\./) {
@@ -760,8 +759,8 @@ while (1) {
 		$flight{$hex_ident}{'position_count'}++;
 		$position_count++;
 		#
-		# 18-feb-2020 add-on to reduce messages - number is in msec (so 5e6 = 5 secs). Code snippet by Wiedehopf. 
-		next if (exists $flight{$hex_ident}{'prev_lon_loggedtime'}        && abs($flight{$hex_ident}{'lon_loggedtime'} - $flight{$hex_ident}{'prev_lon_loggedtime'}) < 1e6);
+		# 18-feb-2020 add-on to reduce messages - number is in msec (so 5e3 = 5 secs). Code snippet by Wiedehopf. 
+		next if (exists $flight{$hex_ident}{'prev_lon_loggedtime'}        && abs($flight{$hex_ident}{'lon_loggedtime'} - $flight{$hex_ident}{'prev_lon_loggedtime'}) < 1e3);
 		# Get angle and distance
 		my $angle = int(angle($latitude,$longitude,$flight{$hex_ident}{'lat'},$flight{$hex_ident}{'lon'}) * 100) / 100;
 		my $distance = distance($latitude,$longitude,$flight{$hex_ident}{'lat'},$flight{$hex_ident}{'lon'});	
